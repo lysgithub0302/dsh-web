@@ -125,6 +125,26 @@ describe('status transitions', () => {
     expect(execution.result).toBeUndefined()
     expect(task.updatedAt).toBe(NOW + 5)
   })
+
+
+  it('startExecution snapshots the prompt and title the run was opened with', () => {
+    const task = sampleTask()
+    const { execution } = startExecution(task, NOW, 'exec-1')
+    expect(execution.promptSnapshot).toBe(task.prompt)
+    expect(execution.titleSnapshot).toBe(task.title)
+  })
+
+  it('snapshots survive later card edits: each execution keeps what it ran with', () => {
+    const task = sampleTask()
+    const first = startExecution(task, NOW, 'exec-1').execution
+    const edited = { ...task, title: '改后的标题', prompt: '改后的提示词' }
+    const second = startExecution(edited, NOW + 10, 'exec-2')
+    expect(first.promptSnapshot).toBe(task.prompt)
+    expect(second.execution.promptSnapshot).toBe('改后的提示词')
+    expect(second.execution.titleSnapshot).toBe('改后的标题')
+    // Records shaped before snapshots existed load without them — optional fields.
+    expect({ ...first, promptSnapshot: undefined, titleSnapshot: undefined }.promptSnapshot).toBeUndefined()
+  })
 })
 
 describe('settleExecution', () => {

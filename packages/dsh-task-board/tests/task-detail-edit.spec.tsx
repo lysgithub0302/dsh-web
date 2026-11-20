@@ -111,12 +111,15 @@ describe('task content editing before execution (issue #1110)', () => {
     expect(editButtonOf(container)).toBeUndefined()
   })
 
-  it('hides the edit button for a settled task', async () => {
+  it('offers the edit button for a settled task: snapshots keep history auditable', async () => {
     const { container } = await renderDetail(task({
       status: 'done',
-      executions: [{ id: 'e-done', sessionId: undefined, startedAt: 1, endedAt: 2, result: 'succeeded', error: undefined }],
+      executions: [{ id: 'e-done', sessionId: undefined, startedAt: 1, endedAt: 2, result: 'succeeded', error: undefined, promptSnapshot: 'do it', titleSnapshot: 'Task A' }],
     }))
-    expect(editButtonOf(container)).toBeUndefined()
+    const editButton = editButtonOf(container)
+    expect(editButton).toBeDefined()
+    await act(async () => { editButton!.click() })
+    expect(container.querySelector('[role="dialog"][aria-label="编辑任务"]')).not.toBeNull()
   })
 
   it('saves edited content through the controller and closes', async () => {
